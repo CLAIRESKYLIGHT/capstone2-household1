@@ -1,65 +1,41 @@
 {
   "version": 1,
-  "author": "Angela",
+  "author": "Angela Claire",
   "editor": "wokwi",
   "parts": [
     {
       "type": "wokwi-esp32-devkit-v1",
       "id": "esp",
-      "top": -14.5,
-      "left": -5,
+      "top": 0,
+      "left": 0,
       "attrs": {}
     },
     {
-      "type": "wokwi-lcd1602-i2c",
-      "id": "lcd1",
-      "top": -80,
-      "left": 190,
-      "attrs": {
-        "0": "a",
-        "1": "d",
-        "2": "d",
-        "3": "r",
-        "4": "e",
-        "5": "s",
-        "6": "s",
-        "7": "=",
-        "8": "0",
-        "9": "x",
-        "10": "2",
-        "11": "7"
-      }
-    },
-    {
       "type": "wokwi-lcd1602",
-      "id": "lcd2",
-      "top": 35.2,
-      "left": 149.6,
+      "id": "lcd1",
+      "top": -150,
+      "left": 0,
       "attrs": { "pins": "i2c" }
     },
     {
       "type": "wokwi-buzzer",
       "id": "bz1",
-      "top": -74.4,
-      "left": 136.2,
+      "top": 150,
+      "left": 0,
       "attrs": {}
     }
   ],
   "connections": [
-    ["esp:GND.1", "lcd1:GND.1", "black", []],
-    ["esp:3V3", "lcd1:VCC", "red", []],
-    ["esp:GPIO21", "lcd1:SDA", "green", []],
-    ["esp:GPIO22", "lcd1:SCL", "blue", []],
-    ["lcd2:GND", "esp:GND.1", "black", ["h0"]],
-    ["lcd2:VCC", "esp:3V3", "red", ["h0"]],
-    ["lcd2:SDA", "esp:GPIO21", "green", ["h0"]],
-    ["lcd2:SCL", "esp:GPIO22", "blue", ["h0"]],
-    ["esp:GND.1", "bz1:GND", "black", []],
-    ["esp:GPIO12", "bz1:SIG", "orange", []],
-    ["lcd2:SDA", "esp:D21", "green", ["h0"]],
-    ["lcd2:SCL", "esp:D22", "green", ["h0"]],
-    ["bz1:2", "esp:D12", "green", ["v0"]],
-    ["bz1:1", "esp:GND.2", "green", ["v0"]]
+    ["esp:TX0", "$serialMonitor:RX", "", []],
+    ["esp:RX0", "$serialMonitor:TX", "", []],
+
+    ["esp:D21", "lcd1:SDA", "green", []],
+    ["esp:D22", "lcd1:SCL", "blue", []],
+    ["esp:5V", "lcd1:VCC", "red", []],
+    ["esp:GND.1", "lcd1:GND", "black", []],
+
+    ["esp:D12", "bz1:1", "green", []],
+    ["esp:GND.2", "bz1:2", "black", []]
   ],
   "dependencies": {}
 }

@@ -145,6 +145,10 @@ void displayAnnouncement(String message, int alertType) {
   }
   
   lcd.setCursor(0, 1);
+
+  // === Serial logging for announcements ===
+  Serial.print("ANNOUNCE:");
+  Serial.println(message);
   
   // Display message (with scrolling if long)
   if (message.length() > 16) {
