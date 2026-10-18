@@ -1,3 +1,4 @@
+from matplotlib import text
 import serial
 import threading
 import time
@@ -52,35 +53,30 @@ def listen_loop():
         del engine
 
     def speak(text):
-        text = (text or "").strip()
-        if not text:
-            return
-        print(f"Speaking: {text}")
-        try:
-            speak_tagalog(text)
-        except Exception as exc:
-            print(f"Tagalog TTS failed ({exc}), falling back to offline voice...")
-            try:
-                speak_fallback(text)
-            except Exception as exc2:
-                print(f"TTS error: {exc2}")
-
-    buffer = ""
+        print(f"[TTS] Attempting to speak: {text}")
+    pythoncom.CoInitialize()
     try:
-        while True:
-            data = ser.read(1)
-            if not data:
-                time.sleep(0.02)
-                continue
-            buffer += data.decode(errors="ignore")
-            if "\n" in buffer:
-                line, buffer = buffer.split("\n", 1)
-                line = line.strip()
-                if line.startswith("ANNOUNCE:"):
-                    text = line.replace("ANNOUNCE:", "", 1).strip()
-                    speak(text)
+        asyncio.run(asyncio.wait_for(speak_tagalog(text), timeout=2.5))
+        print("[TTS] Tagalog voice succeeded.")
     except Exception as exc:
-        print(f"Serial/listener error: {exc}")
+        print(f"[TTS] Tagalog TTS failed or too slow: {exc}")
+        print("[TTS] Falling back to offline voice...")
+        try:
+            engine = pyttsx3.init()
+            engine.setProperty("rate", 180)
+            # Force a FEMALE voice for the fallback too, for consistency
+            voices = engine.getProperty("voices")
+            for voice in voices:
+                name = voice.name.lower()
+                if "zira" in name or "female" in name:
+                    engine.setProperty("voice", voice.id)
+                    break
+            engine.say(text)
+            engine.runAndWait()
+            engine.stop()
+            print("[TTS] Fallback voice succeeded.")
+        except Exception as exc2:
+            print(f"[TTS] Fallback ALSO failed: {exc2}")
     finally:
         pythoncom.CoUninitialize()
 
