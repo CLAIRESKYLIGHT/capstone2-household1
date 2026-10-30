@@ -16,7 +16,7 @@
 #define WIFI_SSID "Wokwi-GUEST"
 #define WIFI_PASSWORD ""
 #define NTP_SERVER "pool.ntp.org"
-#define UTC_OFFSET 0
+#define UTC_OFFSET 28800
  
 // Shared secret - MUST match the Gateway's exactly
 #define SHARED_SECRET "BarangayOtaviSecretKey2026"
@@ -202,19 +202,20 @@ void displayTime() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
     lcd.setCursor(0, 1);
-    lcd.print("Time Error");
+    lcd.print("Time Error      ");
     return;
   }
- 
+
   strftime(timeBuffer, sizeof(timeBuffer), "%H:%M:%S", &timeinfo);
   strftime(dateBuffer, sizeof(dateBuffer), "%d/%m/%Y", &timeinfo);
- 
+
   lcd.setCursor(0, 0);
   lcd.print(timeBuffer);
- 
+  lcd.print("        ");     // clear the rest of the top line (16 columns)
+
   lcd.setCursor(0, 1);
   lcd.print(dateBuffer);
-  lcd.print("   ");
+  lcd.print("      ");       // clear the rest of the bottom line
 }
  
 // ===== FUNCTION: Word-wrap a message into lines of at most 16 characters =====
