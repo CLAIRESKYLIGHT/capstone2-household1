@@ -36,6 +36,9 @@ char dateBuffer[20];
 bool greenBlinkState = false;
 unsigned long lastBlinkTime = 0;
 const unsigned long BLINK_INTERVAL = 500;
+int currentAlertType = 0;                 // 0 = no announcement yet, 1 = emergency, 2 = warning, 3 = normal
+unsigned long alertStartTime = 0;
+const unsigned long BLUE_HOLD_MS = 0;     
  
 // ===== PERSISTENT ANNOUNCEMENT TRACKING (paged display: whole message, 2 lines per page) =====
 String lastMessage = "";
@@ -95,8 +98,18 @@ void ledGreen()   { setLED(false, true,  false); }
 void ledBlue()    { setLED(false, false, true ); }
 void ledYellow()  { setLED(true,  true,  false); }
  
-// ===== FUNCTION: Update idle blinking green LED =====
+
+// ===== FUNCTION: Update the status LED =====
 void updateIdleLED() {
+  if (currentAlertType == 1) {
+    ledRed();
+    return;
+  }
+  if (currentAlertType != 0 &&
+      (BLUE_HOLD_MS == 0 || millis() - alertStartTime < BLUE_HOLD_MS)) {
+    ledBlue();
+    return;
+  }
   if (millis() - lastBlinkTime >= BLINK_INTERVAL) {
     lastBlinkTime = millis();
     greenBlinkState = !greenBlinkState;
@@ -196,6 +209,22 @@ void getTime() {
     playAlert(4);
   }
 }
+
+// ===== FUNCTION: Decide the alert type from keywords in the message =====
+// 1 = EMERGENCY (red), 2 = WARNING (blue, labelled WARNING), 3 = normal (blue)
+int classifyAlert(const String& message) {
+  String m = message;
+  m.toUpperCase();
+  if (m.indexOf("EMERGENCY") >= 0 || m.indexOf("SUNOG") >= 0 ||
+      m.indexOf("LUMIKAS") >= 0  || m.indexOf("STORM SURGE") >= 0) {
+    return 1;
+  }
+  if (m.indexOf("WARNING") >= 0 || m.indexOf("BABALA") >= 0 ||
+      m.indexOf("PAALALA") >= 0) {
+    return 2;
+  }
+  return 3;
+}
  
 // ===== FUNCTION: Display Time on LCD (shown only when no announcement is pending) =====
 void displayTime() {
@@ -289,16 +318,19 @@ void updatePersistentDisplay() {
 }
  
 // ===== FUNCTION: Handle a new VERIFIED incoming announcement =====
-void displayAnnouncement(String message, int alertType) {
-  if (alertType == 1) {
-    for (int i = 0; i < 6; i++) {
+void displayAnnouncement(String message, int alertType){
+  currentAlertType = alertType;  
+  alertStartTime = millis();
+ if (alertType == 1) {
+    for (int i = 0; i < 6; i++) {  
       ledRed();
       delay(150);
       ledOff();
       delay(150);
     }
+    ledRed();                       
   } else {
-    ledBlue();
+    ledBlue();                      
   }
  
   playAlert(alertType);
@@ -431,7 +463,8 @@ void processIncomingPacket(String packet) {
     Serial.println(" reached, shown but not forwarded");
   }
  
-  displayAnnouncement(message, 3);
+  //displayAnnouncement(message, 3);
+  displayAnnouncement(message, classifyAlert(message));
 }
  
 // ===== FUNCTION: Check for incoming announcement from Gateway (via Serial) =====
